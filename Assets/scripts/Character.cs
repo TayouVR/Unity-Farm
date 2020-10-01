@@ -16,6 +16,7 @@ public class Character : MonoBehaviour {
     //private Rigidbody _rigidbody;
     private Transform _camTransform;
     float headRotation = 0f;
+    private bool didntMove;
 
     // Start is called before the first frame update
     void Start() {
@@ -49,10 +50,9 @@ public class Character : MonoBehaviour {
     // Update is called once per frame
     void FixedUpdate() {
         
+        // mouse, camera
         float x = Input.GetAxis("Mouse X") * sensitivity * Time.deltaTime;
         float y = Input.GetAxis("Mouse Y") * sensitivity * Time.deltaTime * -1f;
-        //targetModel.SetFloat("Turn", x);
-        targetModel.transform.Rotate(0f, x, 0f);
         headRotation += y;
         if (headRotation <= -90) {
             headRotation = -90;
@@ -60,25 +60,48 @@ public class Character : MonoBehaviour {
         if (headRotation >= 90) {
             headRotation = 90;
         }
-        cameraOffset.parent.localEulerAngles = new Vector3(headRotation, 0f, 0f);
+        
+        // sprinting
+        int speedModifier = 1;
+        if (Input.GetAxis("Sprint") > 0) {
+            speedModifier = 2;
+        }
+
+        float rightSpeed = Input.GetAxis("Horizontal") / 2 * speedModifier;
+        float frontSpeed = Input.GetAxis("Vertical") / 2 * speedModifier;
         
         bool isGrounded;
         //isGrounded = _characterController.isGrounded;
         isGrounded = Physics.Raycast(transform.position + new Vector3(0, 0.5f, 0), Vector3.down, 2f, 1);
         targetModel.SetBool("OnGround", isGrounded);
         if (isGrounded) {
-            Vector3 movement = new Vector3(Input.GetAxis("Horizontal"), 0.0f, Input.GetAxis("Vertical"));
+            //Vector3 movement = new Vector3(Input.GetAxis("Horizontal"), 0.0f, Input.GetAxis("Vertical"));
             //_rigidbody.AddForce(movement * speed);
             // SetAnimator Info
-            targetModel.SetFloat("Right", movement.x);
-            targetModel.SetFloat("Forward", movement.z);
+            targetModel.SetFloat("Right", rightSpeed); //movement.x);
+            targetModel.SetFloat("Forward", frontSpeed); //movement.z);
             //_rigidbody.AddForce(new Vector3(0.0f, Input.GetAxis("Jump") * jumpStrength, 0.0f));
             targetModel.SetBool("Crouch", Input.GetAxis("Crouch") > 0);
         } else {
             targetModel.SetFloat("Jump", Input.GetAxis("Jump"));  //_rigidbody.velocity.y);
         }
-        //targetModel.transform.position = transform.position;
-        transform.position = targetModel.transform.position;
-        transform.rotation = targetModel.transform.rotation;
+
+        if (frontSpeed == 0 && rightSpeed == 0) {
+            transform.RotateAround(cameraOffset.parent.transform.position, Vector3.up, x);
+            //cameraOffset.parent.transform.Rotate(0f, x, 0f);
+            didntMove = true;
+        } else {
+            if (didntMove) {
+                targetModel.transform.rotation = transform.rotation;
+                didntMove = false;
+            }
+            //targetModel.SetFloat("Turn", x);
+            targetModel.transform.Rotate(0f, x, 0f);
+        
+            //targetModel.transform.position = transform.position;
+            transform.position = targetModel.transform.position;
+            transform.rotation = targetModel.transform.rotation;
+        }
+        cameraOffset.parent.localEulerAngles = new Vector3(headRotation, x, 0f);
     }
 }
