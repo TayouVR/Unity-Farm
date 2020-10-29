@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Mirror;
 using UnityEngine;
 
 //[RequireComponent(typeof(CharacterController))]
@@ -41,6 +42,8 @@ public class Character : MonoBehaviour {
 
         model = Instantiate(modelPrefab, spawnpoint.position, spawnpoint.rotation, transform.parent);
         animator = model.GetComponent<Animator>();
+        
+        model.AddComponent<NetworkTransform>();
 
         //_characterController = GetComponent<CharacterController>();
         //_rigidbody = GetComponent<Rigidbody>();
