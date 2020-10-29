@@ -4,7 +4,7 @@ using UnityEngine;
 
 //[RequireComponent(typeof(CharacterController))]
 //[RequireComponent(typeof(Rigidbody))]
-public class Character : MonoBehaviour {
+public class Character : NetworkBehaviour {
 
     public float jumpStrength = 1;
     public float speed = 1;
@@ -47,12 +47,14 @@ public class Character : MonoBehaviour {
 
         //_characterController = GetComponent<CharacterController>();
         //_rigidbody = GetComponent<Rigidbody>();
-        
-        // putCamera into Camera offset 
-        cam.transform.SetParent(cameraOffset);
-        cam.transform.position = cameraOffset.position;
-        cam.transform.rotation = cameraOffset.rotation;
-        
+
+        if (isLocalPlayer) {
+            // putCamera into Camera offset 
+            cam.transform.SetParent(cameraOffset);
+            cam.transform.position = cameraOffset.position;
+            cam.transform.rotation = cameraOffset.rotation;
+        }
+
         // set model transform (pos, rot, parent)
         //targetModel.GetComponent<Transform>().SetParent(GetComponent<Transform>());
         //model.transform.position = transform.position;
@@ -66,26 +68,31 @@ public class Character : MonoBehaviour {
 
     // Update is called once per frame
     void FixedUpdate() {
-        
-        // mouse, camera
-        float x = Input.GetAxis("Mouse X") * sensitivity * Time.deltaTime;
-        float y = Input.GetAxis("Mouse Y") * sensitivity * Time.deltaTime * -1f;
-        headRotation += y;
-        if (headRotation <= -90) {
-            headRotation = -90;
-        }
-        if (headRotation >= 90) {
-            headRotation = 90;
-        }
-        
-        // sprinting
-        int speedModifier = 1;
-        if (Input.GetAxis("Sprint") > 0) {
-            speedModifier = 2;
-        }
+        float rightSpeed = 0;
+        float frontSpeed = 0;
+        float x = 0;
+        float y = 0;
+        if (isLocalPlayer) {
+            // mouse, camera
+            x = Input.GetAxis("Mouse X") * sensitivity * Time.deltaTime;
+            y = Input.GetAxis("Mouse Y") * sensitivity * Time.deltaTime * -1f;
+            headRotation += y;
+            if (headRotation <= -90) {
+                headRotation = -90;
+            }
+            if (headRotation >= 90) {
+                headRotation = 90;
+            }
+            
+            // sprinting
+            int speedModifier = 1;
+            if (Input.GetAxis("Sprint") > 0) {
+                speedModifier = 2;
+            }
 
-        float rightSpeed = Input.GetAxis("Horizontal") / 2 * speedModifier;
-        float frontSpeed = Input.GetAxis("Vertical") / 2 * speedModifier;
+            rightSpeed = Input.GetAxis("Horizontal") / 2 * speedModifier;
+            frontSpeed = Input.GetAxis("Vertical") / 2 * speedModifier;
+        }
 
         //isGrounded = _characterController.isGrounded;
         isGrounded = Physics.Raycast(transform.position + new Vector3(0, 0.5f, 0), Vector3.down, 2f, 1);
