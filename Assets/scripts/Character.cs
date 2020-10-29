@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 //[RequireComponent(typeof(CharacterController))]
 //[RequireComponent(typeof(Rigidbody))]
@@ -7,7 +8,8 @@ public class Character : MonoBehaviour {
     public float jumpStrength = 1;
     public float speed = 1;
     public Camera cam;
-    public Animator targetModel;
+    public Animator animator;
+    public GameObject modelPrefab;
     public Transform spawnpoint;
     public Transform cameraOffset;
     [SerializeField] float sensitivity = 100;
@@ -17,6 +19,9 @@ public class Character : MonoBehaviour {
     private Transform _camTransform;
     float headRotation = 0f;
     private bool didntMove;
+    private bool isGrounded;
+    private GameObject model;
+    private List<Transform> spawnpoints = new List<Transform>(); 
 
     // Start is called before the first frame update
     void Start() {
@@ -24,9 +29,18 @@ public class Character : MonoBehaviour {
         // lock cursor
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
+
+        foreach (Spawnpoint spawnpoint in FindObjectsOfType<Spawnpoint>()) {
+            spawnpoints.Add(spawnpoint.transform);
+        }
+
+        spawnpoint = spawnpoints[Random.Range(0, spawnpoints.Count-1)];
         
         transform.position = spawnpoint.position;
         transform.rotation = spawnpoint.rotation;
+
+        model = Instantiate(modelPrefab, spawnpoint.position, spawnpoint.rotation);
+        animator = model.GetComponent<Animator>();
 
         //_characterController = GetComponent<CharacterController>();
         //_rigidbody = GetComponent<Rigidbody>();
@@ -38,12 +52,12 @@ public class Character : MonoBehaviour {
         
         // set model transform (pos, rot, parent)
         //targetModel.GetComponent<Transform>().SetParent(GetComponent<Transform>());
-        targetModel.transform.position = transform.position;
-        targetModel.transform.rotation = new Quaternion();
-        targetModel.gameObject.AddComponent<Rigidbody>();
-        Rigidbody rb = targetModel.GetComponent<Rigidbody>();
+        //model.transform.position = transform.position;
+        //model.transform.rotation = new Quaternion();
+        model.gameObject.AddComponent<Rigidbody>();
+        Rigidbody rb = animator.GetComponent<Rigidbody>();
         rb.constraints = RigidbodyConstraints.FreezeRotation;
-        CapsuleCollider col = targetModel.gameObject.AddComponent<CapsuleCollider>();
+        CapsuleCollider col = animator.gameObject.AddComponent<CapsuleCollider>();
         col.center = new Vector3(0, 0.5f, 0);
     }
 
@@ -69,21 +83,20 @@ public class Character : MonoBehaviour {
 
         float rightSpeed = Input.GetAxis("Horizontal") / 2 * speedModifier;
         float frontSpeed = Input.GetAxis("Vertical") / 2 * speedModifier;
-        
-        bool isGrounded;
+
         //isGrounded = _characterController.isGrounded;
         isGrounded = Physics.Raycast(transform.position + new Vector3(0, 0.5f, 0), Vector3.down, 2f, 1);
-        targetModel.SetBool("OnGround", isGrounded);
+        animator.SetBool("OnGround", isGrounded);
         if (isGrounded) {
             //Vector3 movement = new Vector3(Input.GetAxis("Horizontal"), 0.0f, Input.GetAxis("Vertical"));
             //_rigidbody.AddForce(movement * speed);
             // SetAnimator Info
-            targetModel.SetFloat("Right", rightSpeed); //movement.x);
-            targetModel.SetFloat("Forward", frontSpeed); //movement.z);
+            animator.SetFloat("Right", rightSpeed); //movement.x);
+            animator.SetFloat("Forward", frontSpeed); //movement.z);
             //_rigidbody.AddForce(new Vector3(0.0f, Input.GetAxis("Jump") * jumpStrength, 0.0f));
-            targetModel.SetBool("Crouch", Input.GetAxis("Crouch") > 0);
+            animator.SetBool("Crouch", Input.GetAxis("Crouch") > 0);
         } else {
-            targetModel.SetFloat("Jump", Input.GetAxis("Jump"));  //_rigidbody.velocity.y);
+            animator.SetFloat("Jump", Input.GetAxis("Jump"));  //_rigidbody.velocity.y);
         }
 
         if (frontSpeed == 0 && rightSpeed == 0) {
@@ -92,15 +105,15 @@ public class Character : MonoBehaviour {
             didntMove = true;
         } else {
             if (didntMove) {
-                targetModel.transform.rotation = transform.rotation;
+                animator.transform.rotation = transform.rotation;
                 didntMove = false;
             }
             //targetModel.SetFloat("Turn", x);
-            targetModel.transform.Rotate(0f, x, 0f);
+            animator.transform.Rotate(0f, x, 0f);
         
             //targetModel.transform.position = transform.position;
-            transform.position = targetModel.transform.position;
-            transform.rotation = targetModel.transform.rotation;
+            transform.position = animator.transform.position;
+            transform.rotation = animator.transform.rotation;
         }
         cameraOffset.parent.localEulerAngles = new Vector3(headRotation, x, 0f);
     }
