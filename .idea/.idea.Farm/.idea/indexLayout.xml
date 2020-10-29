@@ -48,6 +48,7 @@
       <Path>Temp</Path>
       <Path>UserSettings</Path>
       <Path>obj</Path>
+      <Path>out_win</Path>
     </explicitExcludes>
   </component>
 </project>

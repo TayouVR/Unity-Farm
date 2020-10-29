@@ -39,7 +39,7 @@ public class Character : MonoBehaviour {
         transform.position = spawnpoint.position;
         transform.rotation = spawnpoint.rotation;
 
-        model = Instantiate(modelPrefab, spawnpoint.position, spawnpoint.rotation);
+        model = Instantiate(modelPrefab, spawnpoint.position, spawnpoint.rotation, transform.parent);
         animator = model.GetComponent<Animator>();
 
         //_characterController = GetComponent<CharacterController>();
