@@ -8,7 +8,6 @@ public class Character : NetworkBehaviour {
 
     public float jumpStrength = 1;
     public float speed = 1;
-    public Camera cam;
     public Animator animator;
     public GameObject modelPrefab;
     public Transform spawnpoint;
@@ -17,6 +16,7 @@ public class Character : NetworkBehaviour {
 
     //private CharacterController _characterController;
     //private Rigidbody _rigidbody;
+    private Camera cam;
     private Transform _camTransform;
     float headRotation = 0f;
     private bool didntMove;
@@ -50,6 +50,8 @@ public class Character : NetworkBehaviour {
 
         if (isLocalPlayer) {
             // putCamera into Camera offset 
+            GameObject camGO = new GameObject();
+            cam = camGO.AddComponent<Camera>();
             cam.transform.SetParent(cameraOffset);
             cam.transform.position = cameraOffset.position;
             cam.transform.rotation = cameraOffset.rotation;
