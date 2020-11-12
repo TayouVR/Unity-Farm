@@ -22,7 +22,10 @@ public class Character : NetworkBehaviour {
     private bool didntMove;
     private bool isGrounded;
     private GameObject model;
-    private List<Transform> spawnpoints = new List<Transform>(); 
+    private List<Transform> spawnpoints = new List<Transform>();
+    private NetworkAnimator ntwkAnimator;
+    
+    private Dictionary<AmmoType, int> ammo = new Dictionary<AmmoType, int>();
 
     // Start is called before the first frame update
     void Start() {
@@ -43,13 +46,20 @@ public class Character : NetworkBehaviour {
         model = Instantiate(modelPrefab, spawnpoint.position, spawnpoint.rotation, transform.parent);
         animator = model.GetComponent<Animator>();
         
+        model.SetActive(false);
+        
+        ntwkAnimator = model.AddComponent<NetworkAnimator>();
         model.AddComponent<NetworkTransform>();
+        ntwkAnimator.animator = animator;
+        ntwkAnimator.clientAuthority = true;
+        
+        model.SetActive(true);
 
         //_characterController = GetComponent<CharacterController>();
         //_rigidbody = GetComponent<Rigidbody>();
 
+        // locally attach camera to player object
         if (isLocalPlayer) {
-            // putCamera into Camera offset 
             GameObject camGO = new GameObject();
             cam = camGO.AddComponent<Camera>();
             cam.transform.SetParent(cameraOffset);
@@ -58,9 +68,6 @@ public class Character : NetworkBehaviour {
         }
 
         // set model transform (pos, rot, parent)
-        //targetModel.GetComponent<Transform>().SetParent(GetComponent<Transform>());
-        //model.transform.position = transform.position;
-        //model.transform.rotation = new Quaternion();
         model.gameObject.AddComponent<Rigidbody>();
         Rigidbody rb = animator.GetComponent<Rigidbody>();
         rb.constraints = RigidbodyConstraints.FreezeRotation;
@@ -72,13 +79,14 @@ public class Character : NetworkBehaviour {
     void FixedUpdate() {
         float rightSpeed = 0;
         float frontSpeed = 0;
-        float x = 0;
-        float y = 0;
+        float mouseX = 0;
+        float mouseY = 0;
         if (isLocalPlayer) {
+            
             // mouse, camera
-            x = Input.GetAxis("Mouse X") * sensitivity * Time.deltaTime;
-            y = Input.GetAxis("Mouse Y") * sensitivity * Time.deltaTime * -1f;
-            headRotation += y;
+            mouseX = Input.GetAxis("Mouse X") * sensitivity * Time.deltaTime;
+            mouseY = Input.GetAxis("Mouse Y") * sensitivity * Time.deltaTime * -1f;
+            headRotation += mouseY;
             if (headRotation <= -90) {
                 headRotation = -90;
             }
@@ -92,12 +100,16 @@ public class Character : NetworkBehaviour {
                 speedModifier = 2;
             }
 
+            //set speed to var
             rightSpeed = Input.GetAxis("Horizontal") / 2 * speedModifier;
             frontSpeed = Input.GetAxis("Vertical") / 2 * speedModifier;
         }
 
+        //check if character is grounded
         //isGrounded = _characterController.isGrounded;
         isGrounded = Physics.Raycast(transform.position + new Vector3(0, 0.5f, 0), Vector3.down, 2f, 1);
+        
+        // set animator param for grounhded
         animator.SetBool("OnGround", isGrounded);
         if (isGrounded) {
             //Vector3 movement = new Vector3(Input.GetAxis("Horizontal"), 0.0f, Input.GetAxis("Vertical"));
@@ -107,13 +119,12 @@ public class Character : NetworkBehaviour {
             animator.SetFloat("Forward", frontSpeed); //movement.z);
             //_rigidbody.AddForce(new Vector3(0.0f, Input.GetAxis("Jump") * jumpStrength, 0.0f));
             animator.SetBool("Crouch", Input.GetAxis("Crouch") > 0);
-        } else {
             animator.SetFloat("Jump", Input.GetAxis("Jump"));  //_rigidbody.velocity.y);
         }
 
+        // if character doesn't move free camera rotation, otherwise rotate character
         if (frontSpeed == 0 && rightSpeed == 0) {
-            transform.RotateAround(cameraOffset.parent.transform.position, Vector3.up, x);
-            //cameraOffset.parent.transform.Rotate(0f, x, 0f);
+            transform.RotateAround(cameraOffset.parent.transform.position, Vector3.up, mouseX);
             didntMove = true;
         } else {
             if (didntMove) {
@@ -121,12 +132,12 @@ public class Character : NetworkBehaviour {
                 didntMove = false;
             }
             //targetModel.SetFloat("Turn", x);
-            animator.transform.Rotate(0f, x, 0f);
+            animator.transform.Rotate(0f, mouseX, 0f);
         
             //targetModel.transform.position = transform.position;
-            transform.position = animator.transform.position;
             transform.rotation = animator.transform.rotation;
         }
-        cameraOffset.parent.localEulerAngles = new Vector3(headRotation, x, 0f);
+        transform.position = animator.transform.position;
+        cameraOffset.parent.localEulerAngles = new Vector3(headRotation, mouseX, 0f);
     }
 }
