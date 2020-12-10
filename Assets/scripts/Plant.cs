@@ -1,25 +1,37 @@
 ﻿using System;
 using UnityEngine;
+using Random = System.Random;
 
-public class Plant : MonoBehaviour {
+public class Plant : Interactable {
 	public int reseedTime;
+
+	public Vector2Int minMaxAmmoYield;
 	
 	public string plantName;
-	public int growthStage;
+	public float growthStage;
 	public int reseedWaitTime;
+	[Tooltip("Growth Time in Seconds")]
+	public int growthTime = 100;
+
+	public AmmoType ammoObject;
 
 	private float timerTimestamp;
 
 	private void Update() {
-		if (growthStage >= 1) {
-			if (growthStage == 1) {
-				timerTimestamp = Time.time;
-			}
-
-			if (growthStage > 100) {
-				growthStage = 100;
-			} else if (growthStage < 100) {
-				growthStage = (int) Math.Floor(Time.time - timerTimestamp);
+		if (growthStage > 0) {
+			transform.localScale = new Vector3(growthStage / growthTime, growthStage / growthTime, growthStage / growthTime);
+		} else {
+			transform.localScale = new Vector3(0, 0, 0);
+		}
+		if (growthStage <= -1) {
+			timerTimestamp = Time.time;
+			growthStage = 0;
+		}
+		if (growthStage >= 0) {
+			if (growthStage > growthTime) {
+				growthStage = growthTime;
+			} else if (growthStage < growthTime) {
+				growthStage = Time.time - timerTimestamp;
 			}
 		} else {
 
@@ -31,8 +43,10 @@ public class Plant : MonoBehaviour {
 		}
 	}
 
-	private void Harvest() {
-		growthStage = 0;
+	public int Harvest() {
+		growthStage = -1;
 		timerTimestamp = Time.time;
+		
+		return new Random().Next(minMaxAmmoYield.x,minMaxAmmoYield.y);
 	}
 }

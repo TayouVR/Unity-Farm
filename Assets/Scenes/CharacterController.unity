@@ -602,12 +602,12 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: -5977845377318696254, guid: f58989bcb3e868a4a97dcdb07dfc6cd6,
+    - target: {fileID: 448206689173016290, guid: f58989bcb3e868a4a97dcdb07dfc6cd6,
         type: 3}
       propertyPath: sceneId
-      value: 3369582753
+      value: 419588439
       objectReference: {fileID: 0}
-    - target: {fileID: -5977845377318696254, guid: f58989bcb3e868a4a97dcdb07dfc6cd6,
+    - target: {fileID: 448206689173016290, guid: f58989bcb3e868a4a97dcdb07dfc6cd6,
         type: 3}
       propertyPath: m_AssetId
       value: f58989bcb3e868a4a97dcdb07dfc6cd6
@@ -671,11 +671,6 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: farmer_anime_girl
-      objectReference: {fileID: 0}
-    - target: {fileID: 6791366575912439236, guid: f58989bcb3e868a4a97dcdb07dfc6cd6,
-        type: 3}
-      propertyPath: m_IsActive
-      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: f58989bcb3e868a4a97dcdb07dfc6cd6, type: 3}
