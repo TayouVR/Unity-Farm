@@ -6,7 +6,7 @@ using Random = UnityEngine.Random;
 
 //[RequireComponent(typeof(CharacterController))]
 //[RequireComponent(typeof(Rigidbody))]
-public class Character : NetworkBehaviour {
+public class Character : MonoBehaviour {
 
     public float jumpStrength = 1;
     public float speed = 1;
@@ -69,13 +69,14 @@ public class Character : NetworkBehaviour {
         //_rigidbody = GetComponent<Rigidbody>();
 
         // locally attach camera to player object
-        if (isLocalPlayer) {
+        /*if (isLocalPlayer) {
             GameObject camGO = new GameObject();
+            camGO.tag = "MainCamera";
             cam = camGO.AddComponent<Camera>();
             cam.transform.SetParent(cameraOffset);
             cam.transform.position = cameraOffset.position;
             cam.transform.rotation = cameraOffset.rotation;
-        }
+        }*/
 
         // set model transform (pos, rot, parent)
         model.gameObject.AddComponent<Rigidbody>();
@@ -91,7 +92,7 @@ public class Character : NetworkBehaviour {
         float frontSpeed = 0;
         float mouseX = 0;
         float mouseY = 0;
-        if (isLocalPlayer) {
+        /*if (isLocalPlayer) {*/
             
             // mouse, camera
             mouseX = Input.GetAxis("Mouse X") * sensitivity * Time.deltaTime;
@@ -137,7 +138,7 @@ public class Character : NetworkBehaviour {
             }
             
             //TODO interact stuff
-        }
+        /*}*/
 
         //check if character is grounded
         //isGrounded = _characterController.isGrounded;
