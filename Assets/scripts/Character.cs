@@ -136,8 +136,6 @@ public class Character : MonoBehaviour {
             } else if (lastFocussedInteractable != null){
                 lastFocussedInteractable.GetComponent<Interactable>().Deselect();
             }
-            
-            //TODO interact stuff
         /*}*/
 
         //check if character is grounded
