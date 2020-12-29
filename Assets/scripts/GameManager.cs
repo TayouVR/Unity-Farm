@@ -1,19 +1,24 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
-using Mirror;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour {
-    public GameObject ui;
     
-    private NetworkManager ntwkMgr;
-    // Start is called before the first frame update
-    void Start() {
-        ui.transform.Find("");
-        //ntwkMgr.networkAddress = "";
-    }
+    public Button connectButton;
+    public Button exitButton;
+    public InputField ipInput;
+    public InputField portInput;
+    
+    public NetworkManager ntwkMgr;
 
-    public void Connect() {
+    private void Start() {
+        DontDestroyOnLoad(gameObject);
+        
+        connectButton.onClick.AddListener(StartGame);
+        exitButton.onClick.AddListener(Quit);
     }
 
     /// <summary>
@@ -27,9 +32,12 @@ public class GameManager : MonoBehaviour {
         Application.Quit();
     }
 
-    // Update is called once per frame
-    void Update()
-    {
+    public void StartGame() {
+        ntwkMgr.serverIp = ipInput.text;
+        ntwkMgr.port = int.Parse(portInput.text);
+
+        SceneManager.LoadScene(1, LoadSceneMode.Single);
         
+        ntwkMgr.Connect();
     }
 }

@@ -4,6 +4,7 @@ using System.Net;
 using DarkRift;
 using DarkRift.Client;
 using DarkRift.Client.Unity;
+using UnityEditor.Animations;
 using UnityEngine;
 
 public class NetworkManager : MonoBehaviour {
@@ -11,10 +12,10 @@ public class NetworkManager : MonoBehaviour {
 	[Header("Player Controller Values")]
 	public float jumpStrength = 1;
 	public float speed = 1;
-	public Animator animator;
+	public AnimatorController animator;
 	public GameObject modelPrefab;
 	public Transform spawnpoint;
-	public Transform cameraOffset;
+	public Vector3 cameraOffset;
 	[SerializeField] float sensitivity = 100;
 	
 	
@@ -29,12 +30,16 @@ public class NetworkManager : MonoBehaviour {
     
 	public List<PlayerEntity> Players = new List<PlayerEntity>();
 
-	private string ServerIp = "127.0.0.1";
+	public string serverIp = "127.0.0.1";
+	public int port = 4296;
 
 	private void Start() {
 		DontDestroyOnLoad(gameObject);
+	}
+
+	public void Connect() {
 		client = gameObject.AddComponent<UnityClient>();
-		client.ConnectInBackground(IPAddress.Parse(ServerIp), 4296, 4296, true, ClientConnected);
+		client.ConnectInBackground(IPAddress.Parse(serverIp), port, port, true, ClientConnected);
 		client.MessageReceived += ReceiveMessage;
 		
 		LocalPlayer localPlayer = new LocalPlayer(inputTickrate, jumpStrength, speed, animator, modelPrefab, spawnpoint, cameraOffset, sensitivity);
@@ -152,7 +157,7 @@ public class PlayerEntity
 	}
 }
 
-public class LocalPlayer : UnityEngine.Object {
+public class LocalPlayer {
 	
 	public PlayerEntity entity;
 
@@ -161,7 +166,7 @@ public class LocalPlayer : UnityEngine.Object {
 	public Animator animator;
 	public GameObject modelPrefab;
 	public Transform spawnpoint;
-	public Transform cameraOffset;
+	public Vector3 cameraOffset;
 	public float sensitivity = 100;
 
 	//private CharacterController _characterController;
@@ -173,6 +178,7 @@ public class LocalPlayer : UnityEngine.Object {
 	private bool isGrounded;
 	private GameObject model;
 	private List<Transform> spawnpoints = new List<Transform>();
+	private GameObject camera;
     
 	private Dictionary<AmmoType, int> ammo = new Dictionary<AmmoType, int>();
     
@@ -184,11 +190,10 @@ public class LocalPlayer : UnityEngine.Object {
 	private static readonly int Crouch = Animator.StringToHash("Crouch");
 	private static readonly int Jump = Animator.StringToHash("Jump");
 
-	public LocalPlayer(int inputTickrate, float jumpStrength, float speed, Animator animator, GameObject modelPrefab, Transform spawnpoint, Transform cameraOffset, float sensitivity) {
+	public LocalPlayer(int inputTickrate, float jumpStrength, float speed, AnimatorController animator, GameObject modelPrefab, Transform spawnpoint, Vector3 cameraOffset, float sensitivity) {
 		this.entity = new PlayerEntity();
 		this.jumpStrength = jumpStrength;
 		this.speed = speed;
-		this.animator = animator;
 		this.modelPrefab = modelPrefab;
 		this.spawnpoint = spawnpoint;
 		this.cameraOffset = cameraOffset;
@@ -202,14 +207,15 @@ public class LocalPlayer : UnityEngine.Object {
 		Cursor.visible = false;
 		Cursor.lockState = CursorLockMode.Locked;
 
-		foreach (Spawnpoint spawnpoint2 in FindObjectsOfType<Spawnpoint>()) {
+		foreach (Spawnpoint spawnpoint2 in UnityEngine.Object.FindObjectsOfType<Spawnpoint>()) {
 			spawnpoints.Add(spawnpoint2.transform);
 		}
 
 		spawnpoint = spawnpoints[UnityEngine.Random.Range(0, spawnpoints.Count-1)];
 
-		model = Instantiate(modelPrefab, spawnpoint.position, spawnpoint.rotation);
-		animator = model.GetComponent<Animator>();
+		model = UnityEngine.Object.Instantiate(modelPrefab, spawnpoint.position, spawnpoint.rotation);
+		this.animator = model.GetComponent<Animator>();
+		this.animator.runtimeAnimatorController = animator;
         
 		model.SetActive(false);
         
@@ -222,12 +228,15 @@ public class LocalPlayer : UnityEngine.Object {
 		//_rigidbody = GetComponent<Rigidbody>();
 
 		// locally attach camera to player object
-	    GameObject camGO = new GameObject();
-	    camGO.tag = "MainCamera";
-	    cam = camGO.AddComponent<Camera>();
-	    cam.transform.SetParent(cameraOffset);
-	    cam.transform.position = cameraOffset.position;
-	    cam.transform.rotation = cameraOffset.rotation;
+		GameObject camRotationPoint = new GameObject();
+		camRotationPoint.transform.SetParent(model.transform);
+		camRotationPoint.transform.position = this.animator.GetBoneTransform(HumanBodyBones.Head).position;
+		camera = new GameObject();
+		camera.tag = "MainCamera";
+	    cam = camera.AddComponent<Camera>();
+	    cam.transform.SetParent(camRotationPoint.transform);
+	    cam.transform.position = camRotationPoint.transform.position;
+	    cam.transform.position += cameraOffset;
 
 	    
 		// set model transform (pos, rot, parent)
@@ -307,7 +316,7 @@ public class LocalPlayer : UnityEngine.Object {
 
         // if character doesn't move free camera rotation, otherwise rotate character
         if (frontSpeed == 0 && rightSpeed == 0) {
-            model.transform.RotateAround(cameraOffset.parent.transform.position, Vector3.up, mouseX);
+            model.transform.RotateAround(camera.transform.parent.transform.position, Vector3.up, mouseX);
             didntMove = true;
         } else {
             if (didntMove) {
@@ -321,7 +330,7 @@ public class LocalPlayer : UnityEngine.Object {
             //transform.rotation = animator.transform.rotation;
         }
         //transform.position = animator.transform.position;
-        cameraOffset.parent.localEulerAngles = new Vector3(headRotation, mouseX, 0f);
+        camera.transform.parent.localEulerAngles = new Vector3(headRotation, mouseX, 0f);
         
     }
 
