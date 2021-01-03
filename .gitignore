@@ -67,3 +67,7 @@ out_*.zip
 
 # jetbrains
 .idea/
+
+# Server Logs
+DarkRift Server (.NET Framework)/Logs/
+
