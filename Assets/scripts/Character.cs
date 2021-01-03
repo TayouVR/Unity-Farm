@@ -125,15 +125,18 @@ public class Character {
 		frontSpeed = Input.GetAxis("Vertical") / 2 * speedModifier;
 
 		// interaction
+		raycastSource.transform.localEulerAngles = new Vector3(headRotation, mouseX, 0f);
 #if UNITY_EDITOR
-		Debug.DrawRay(raycastSource.position, new Vector3(0, 1, 0), Color.green, 1);
+		Debug.DrawRay(raycastSource.position, raycastSource.forward * 3, Color.green, 1);
 #endif
-		if (Physics.Raycast(new Ray(raycastSource.position, raycastSource.forward), 
+		if (Physics.Raycast(new Ray(raycastSource.position, raycastSource.forward * 3), 
 		                    out var hit, 
 		                    5, 
 		                    LayerMask.GetMask("Interactable"))) {
 			GameObject hitGO = hit.collider.gameObject;
+			Debug.Log(hitGO);
 			if (lastFocussedInteractable != hitGO && lastFocussedInteractable != null) {
+				Debug.Log("true");
 				lastFocussedInteractable.GetComponent<Interactable>().Deselect();
 				hitGO.GetComponent<Interactable>().Select();
 				lastFocussedInteractable = hitGO;
