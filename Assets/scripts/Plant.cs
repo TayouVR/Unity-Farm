@@ -23,10 +23,6 @@ public class Plant : Interactable {
 		} else {
 			transform.localScale = new Vector3(0, 0, 0);
 		}
-		if (growthStage <= -1) {
-			timerTimestamp = Time.time;
-			growthStage = 0;
-		}
 		if (growthStage >= 0) {
 			if (growthStage > growthTime) {
 				growthStage = growthTime;
@@ -44,8 +40,8 @@ public class Plant : Interactable {
 	}
 
 	public int Harvest() {
-		growthStage = -1;
 		timerTimestamp = Time.time;
+		growthStage = 0;
 		
 		return new Random().Next(minMaxAmmoYield.x,minMaxAmmoYield.y);
 	}

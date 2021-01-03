@@ -2,7 +2,7 @@
 using DarkRift.Client;
 using DarkRift.Client.Unity;
 using UnityEngine;
-
+#pragma warning disable
 public class DragObject : MonoBehaviour
 {
     /// <summary>

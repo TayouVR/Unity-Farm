@@ -4,7 +4,7 @@ using DarkRift.Client.Unity;
 using System.Collections.Generic;
 using UnityEngine;
 using System;
-
+#pragma warning disable
 /// <summary>
 ///     Handles the synchronization of other player's characters.
 /// </summary>

@@ -102,7 +102,8 @@ MonoBehaviour:
   growthStage: 1
   reseedWaitTime: 10
   growthTime: 10
-  ammoObject: {fileID: 0}
+  ammoObject: {fileID: 486702515567088780, guid: e1e07402ab7c3e84f993ad9d84315882,
+    type: 3}
 --- !u!64 &1345744228459576814
 MeshCollider:
   m_ObjectHideFlags: 0

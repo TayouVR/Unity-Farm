@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using System;
-
+#pragma warning disable
 /// <summary>
 ///     Manages the world of blocks.
 /// </summary>

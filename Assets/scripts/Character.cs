@@ -134,13 +134,16 @@ public class Character {
 		                    5, 
 		                    LayerMask.GetMask("Interactable"))) {
 			GameObject hitGO = hit.collider.gameObject;
-			Debug.Log(hitGO);
-			if (lastFocussedInteractable != hitGO && lastFocussedInteractable != null) {
+			if (lastFocussedInteractable != hitGO) {
+				if (lastFocussedInteractable != null) {
+					lastFocussedInteractable.GetComponent<Interactable>().Deselect();
+				}
 				Debug.Log("true");
-				lastFocussedInteractable.GetComponent<Interactable>().Deselect();
 				hitGO.GetComponent<Interactable>().Select();
 				lastFocussedInteractable = hitGO;
 			}
+
+			Debug.Log("Interact Input: " + Input.GetAxis("Interact"));
 			if (Input.GetAxis("Interact") > 0) {
 				// harvest plant
 				if (hitGO.GetComponent<Plant>()) {
@@ -152,6 +155,7 @@ public class Character {
 			}
 		} else if (lastFocussedInteractable != null){
 			lastFocussedInteractable.GetComponent<Interactable>().Deselect();
+			lastFocussedInteractable = null;
 		}
 		/*}*/
 

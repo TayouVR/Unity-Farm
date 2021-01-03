@@ -3,7 +3,7 @@ using DarkRift.Client;
 using DarkRift.Client.Unity;
 using UnityEngine;
 using UnityEngine.UI;
-
+#pragma warning disable
 public class ChatDemo : MonoBehaviour
 {
     [SerializeField]
