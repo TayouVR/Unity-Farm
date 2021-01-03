@@ -7,37 +7,44 @@ using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour {
     
-    public Button connectButton;
-    public Button exitButton;
-    public InputField ipInput;
-    public InputField portInput;
+	public Button connectButton;
+	public Button exitButton;
+	public InputField ipInput;
+	public InputField portInput;
     
-    public NetworkManager ntwkMgr;
+	public NetworkManager ntwkMgr;
 
-    private void Start() {
-        DontDestroyOnLoad(gameObject);
+	private void Start() {
+		DontDestroyOnLoad(gameObject);
         
-        connectButton.onClick.AddListener(StartGame);
-        exitButton.onClick.AddListener(Quit);
-    }
+		connectButton.onClick.AddListener(StartGame);
+		exitButton.onClick.AddListener(Quit);
 
-    /// <summary>
-    /// Quit App method for button call
-    /// </summary>
-    public void Quit() {
+		SceneManager.sceneLoaded += OnConnected;
+	}
+
+	/// <summary>
+	/// Quit App method for button call
+	/// </summary>
+	public void Quit() {
 
 #if UNITY_EDITOR
-        UnityEditor.EditorApplication.isPlaying = false;
+		UnityEditor.EditorApplication.isPlaying = false;
 #endif
-        Application.Quit();
-    }
+		Application.Quit();
+	}
 
-    public void StartGame() {
-        ntwkMgr.serverIp = ipInput.text;
-        ntwkMgr.port = int.Parse(portInput.text);
+	public void StartGame() {
+		//ntwkMgr.serverIp = ipInput.text;
+		//ntwkMgr.port = int.Parse(portInput.text);
 
-        SceneManager.LoadScene(1, LoadSceneMode.Single);
+		SceneManager.LoadScene(1, LoadSceneMode.Single);
         
-        ntwkMgr.Connect();
-    }
+	}
+
+	void OnConnected(Scene arg0, LoadSceneMode loadSceneMode) {
+		if (arg0 == SceneManager.GetSceneByName("SampleScene")) {
+			ntwkMgr.Connect();
+		}
+	}
 }

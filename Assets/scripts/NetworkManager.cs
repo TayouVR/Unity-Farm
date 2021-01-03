@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Net;
 using DarkRift;
 using DarkRift.Client;
 using DarkRift.Client.Unity;
-using UnityEditor.Animations;
 using UnityEngine;
 
 public class NetworkManager : MonoBehaviour {
@@ -12,42 +10,44 @@ public class NetworkManager : MonoBehaviour {
 	[Header("Player Controller Values")]
 	public float jumpStrength = 1;
 	public float speed = 1;
-	public AnimatorController animator;
+	public AnimatorOverrideController animator;
 	public GameObject modelPrefab;
 	public Transform spawnpoint;
 	public Vector3 cameraOffset;
 	[SerializeField] float sensitivity = 100;
-	
-	
+
+	private Character character;
 	
 	
 	[Header("Network Values")]
 	public UnityClient client;
-	public string playerId = Guid.NewGuid().ToString();
+	public string playerId;
 
 	public int networkTickrate = 10;
 	public int inputTickrate;
     
 	public List<PlayerEntity> Players = new List<PlayerEntity>();
 
-	public string serverIp = "127.0.0.1";
-	public int port = 4296;
+	public string serverIp = "gsi01.eu2.alphablend.cloud";
+	public int port = 4558;
 
 	private void Start() {
 		DontDestroyOnLoad(gameObject);
 	}
 
 	public void Connect() {
-		client = gameObject.AddComponent<UnityClient>();
-		client.ConnectInBackground(IPAddress.Parse(serverIp), port, port, true, ClientConnected);
+		playerId = Guid.NewGuid().ToString();
+		//client = gameObject.AddComponent<UnityClient>();
 		client.MessageReceived += ReceiveMessage;
-		
-		LocalPlayer localPlayer = new LocalPlayer(inputTickrate, jumpStrength, speed, animator, modelPrefab, spawnpoint, cameraOffset, sensitivity);
-		
-		SchedulerSystem.AddJob(delegate { SendMovement(localPlayer.entity); }, 0, networkTickrate, -1);
+		client.ConnectInBackground(serverIp, port, true, ClientConnected);
 	}
 
 	private void ClientConnected(Exception e) {
+		character = new Character(playerId, inputTickrate, jumpStrength, speed, animator, modelPrefab, spawnpoint, cameraOffset, sensitivity);
+		
+		SchedulerSystem.AddJob(SendLocalMovement, 0, networkTickrate, -1);
+		SchedulerSystem.AddJob(UpdatePlayerModels, 0, networkTickrate, -1);
+		
 		using (DarkRiftWriter w = DarkRiftWriter.Create()) {
 			w.Write(playerId);
 			using (Message m = Message.Create((ushort)Tag.OnPlayerJoined, w)) {
@@ -58,6 +58,7 @@ public class NetworkManager : MonoBehaviour {
 
 
 	private void ReceiveMessage(object s, MessageReceivedEventArgs e) {
+		Debug.Log(e.Tag);
 		switch ((Tag)e.Tag) {
 			case Tag.OnPlayerJoined:
 				CreatePlayer(e.GetMessage());
@@ -65,10 +66,15 @@ public class NetworkManager : MonoBehaviour {
 			case Tag.OnPlayerLeft:
 				break;
 			case Tag.OnPlayerMove:
+				MovePlayer(e.GetMessage());
 				break;
 			default:
 				throw new ArgumentOutOfRangeException();
 		}
+	}
+
+	private void SendLocalMovement() {
+		SendMovement(character.entity);
 	}
 
 	private void SendMovement(PlayerEntity player) {
@@ -94,9 +100,8 @@ public class NetworkManager : MonoBehaviour {
 		using (DarkRiftReader r = message.GetReader())
 		{
 			string Player = r.ReadString();
-			//Instantiate Player
 
-			GameObject go = gameObject;
+			GameObject go = Instantiate(modelPrefab);
             
 			Players.Add(new PlayerEntity()
 			{
@@ -106,9 +111,16 @@ public class NetworkManager : MonoBehaviour {
 		}
 	}
 
+	private void UpdatePlayerModels() {
+		foreach (var e in Players.FindAll(match => match.dataReceived)) {
+			e.playerRoot.transform.position = new Vector3(e.rootPositionX, e.rootPositionY, e.rootPositionZ);
+			e.playerRoot.transform.rotation = Quaternion.Euler(e.rootRotationX, e.rootRotationY, e.rootRotationZ);
+		}
+	}
+
 	private void MovePlayer(Message message) {
 		string player;
-			using (DarkRiftReader r = message.GetReader())
+		using (DarkRiftReader r = message.GetReader())
 		{
 			player = r.ReadString();
 			PlayerEntity e = Players.Find(match => match.playerId == player);
@@ -122,6 +134,8 @@ public class NetworkManager : MonoBehaviour {
 public class PlayerEntity
 {
 	public string playerId;
+
+	public bool dataReceived;
 
 	public GameObject playerRoot;
     
@@ -140,6 +154,7 @@ public class PlayerEntity
 	public bool isCrouching;
 
 	public void SetNetworkValues(DarkRiftReader r) {
+		dataReceived = true;
 		rootPositionX = r.ReadSingle();
 		rootPositionY = r.ReadSingle();
 		rootPositionZ = r.ReadSingle();
@@ -155,186 +170,4 @@ public class PlayerEntity
 		isGrounded = r.ReadBoolean();
 		isCrouching = r.ReadBoolean();
 	}
-}
-
-public class LocalPlayer {
-	
-	public PlayerEntity entity;
-
-	public float jumpStrength = 1;
-	public float speed = 1;
-	public Animator animator;
-	public GameObject modelPrefab;
-	public Transform spawnpoint;
-	public Vector3 cameraOffset;
-	public float sensitivity = 100;
-
-	//private CharacterController _characterController;
-	//private Rigidbody _rigidbody;
-	private Camera cam;
-	private Transform _camTransform;
-	private float headRotation = 0f;
-	private bool didntMove;
-	private bool isGrounded;
-	private GameObject model;
-	private List<Transform> spawnpoints = new List<Transform>();
-	private GameObject camera;
-    
-	private Dictionary<AmmoType, int> ammo = new Dictionary<AmmoType, int>();
-    
-	private GameObject lastFocussedInteractable;
-    
-	private static readonly int OnGround = Animator.StringToHash("OnGround");
-	private static readonly int Right = Animator.StringToHash("Right");
-	private static readonly int Forward = Animator.StringToHash("Forward");
-	private static readonly int Crouch = Animator.StringToHash("Crouch");
-	private static readonly int Jump = Animator.StringToHash("Jump");
-
-	public LocalPlayer(int inputTickrate, float jumpStrength, float speed, AnimatorController animator, GameObject modelPrefab, Transform spawnpoint, Vector3 cameraOffset, float sensitivity) {
-		this.entity = new PlayerEntity();
-		this.jumpStrength = jumpStrength;
-		this.speed = speed;
-		this.modelPrefab = modelPrefab;
-		this.spawnpoint = spawnpoint;
-		this.cameraOffset = cameraOffset;
-		this.sensitivity = sensitivity;
-		
-		SchedulerSystem.AddJob(Update, 0, inputTickrate, -1);
-		
-		
-        
-		// lock cursor
-		Cursor.visible = false;
-		Cursor.lockState = CursorLockMode.Locked;
-
-		foreach (Spawnpoint spawnpoint2 in UnityEngine.Object.FindObjectsOfType<Spawnpoint>()) {
-			spawnpoints.Add(spawnpoint2.transform);
-		}
-
-		spawnpoint = spawnpoints[UnityEngine.Random.Range(0, spawnpoints.Count-1)];
-
-		model = UnityEngine.Object.Instantiate(modelPrefab, spawnpoint.position, spawnpoint.rotation);
-		this.animator = model.GetComponent<Animator>();
-		this.animator.runtimeAnimatorController = animator;
-        
-		model.SetActive(false);
-        
-		model.transform.position = spawnpoint.position;
-		model.transform.rotation = spawnpoint.rotation;
-        
-		model.SetActive(true);
-
-		//_characterController = GetComponent<CharacterController>();
-		//_rigidbody = GetComponent<Rigidbody>();
-
-		// locally attach camera to player object
-		GameObject camRotationPoint = new GameObject();
-		camRotationPoint.transform.SetParent(model.transform);
-		camRotationPoint.transform.position = this.animator.GetBoneTransform(HumanBodyBones.Head).position;
-		camera = new GameObject();
-		camera.tag = "MainCamera";
-	    cam = camera.AddComponent<Camera>();
-	    cam.transform.SetParent(camRotationPoint.transform);
-	    cam.transform.position = camRotationPoint.transform.position;
-	    cam.transform.position += cameraOffset;
-
-	    
-		// set model transform (pos, rot, parent)
-		Rigidbody rb = model.gameObject.AddComponent<Rigidbody>();
-		rb.constraints = RigidbodyConstraints.FreezeRotation;
-		CapsuleCollider col = model.gameObject.AddComponent<CapsuleCollider>();
-		col.center = new Vector3(0, 0.5f, 0);
-	}
-
-	public void Update() {
-		float rightSpeed = 0;
-        float frontSpeed = 0;
-        float mouseX = 0;
-        float mouseY = 0;
-        /*if (isLocalPlayer) {*/
-            
-            // mouse, camera
-            mouseX = Input.GetAxis("Mouse X") * sensitivity * Time.deltaTime;
-            mouseY = Input.GetAxis("Mouse Y") * sensitivity * Time.deltaTime * -1f;
-            headRotation += mouseY;
-            if (headRotation <= -90) {
-                headRotation = -90;
-            }
-            if (headRotation >= 90) {
-                headRotation = 90;
-            }
-            
-            // sprinting
-            int speedModifier = 1;
-            if (Input.GetAxis("Sprint") > 0) {
-                speedModifier = 2;
-            }
-
-            // set speed to var
-            rightSpeed = Input.GetAxis("Horizontal") / 2 * speedModifier;
-            frontSpeed = Input.GetAxis("Vertical") / 2 * speedModifier;
-
-            // interaction
-            if (Physics.Raycast(Camera.main.ScreenPointToRay(new Vector2(Screen.width / 2f, Screen.height / 2f)),
-                                out var hit, Mathf.Infinity, LayerMask.GetMask("Interactable"))) {
-                GameObject hitGO = hit.collider.gameObject;
-                if (lastFocussedInteractable != hitGO && lastFocussedInteractable != null) {
-                    lastFocussedInteractable.GetComponent<Interactable>().Deselect();
-                    hitGO.GetComponent<Interactable>().Select();
-                    lastFocussedInteractable = hitGO;
-                }
-                if (Input.GetAxis("Interact") > 0) {
-                    // harvest plant
-                    if (hitGO.GetComponent<Plant>()) {
-                        Plant plant = hitGO.GetComponent<Plant>();
-                        if (plant.growthStage == 100) { 
-                            AddAmmo(plant.ammoObject, plant.Harvest());
-                        }
-                    }
-                }
-            } else if (lastFocussedInteractable != null){
-                lastFocussedInteractable.GetComponent<Interactable>().Deselect();
-            }
-        /*}*/
-
-        //check if character is grounded
-        //isGrounded = _characterController.isGrounded;
-        isGrounded = Physics.Raycast(model.transform.position + new Vector3(0, 0.5f, 0), Vector3.down, 2f, 1);
-        
-        // set animator param for grounhded
-        animator.SetBool(OnGround, isGrounded);
-        if (isGrounded) {
-            //Vector3 movement = new Vector3(Input.GetAxis("Horizontal"), 0.0f, Input.GetAxis("Vertical"));
-            //_rigidbody.AddForce(movement * speed);
-            // SetAnimator Info
-            animator.SetFloat(Right, rightSpeed); //movement.x);
-            animator.SetFloat(Forward, frontSpeed); //movement.z);
-            //_rigidbody.AddForce(new Vector3(0.0f, Input.GetAxis("Jump") * jumpStrength, 0.0f));
-            animator.SetBool(Crouch, Input.GetAxis("Crouch") > 0);
-            animator.SetFloat(Jump, Input.GetAxis("Jump"));  //_rigidbody.velocity.y);
-        }
-
-        // if character doesn't move free camera rotation, otherwise rotate character
-        if (frontSpeed == 0 && rightSpeed == 0) {
-            model.transform.RotateAround(camera.transform.parent.transform.position, Vector3.up, mouseX);
-            didntMove = true;
-        } else {
-            if (didntMove) {
-                animator.transform.rotation = model.transform.rotation;
-                didntMove = false;
-            }
-            //targetModel.SetFloat("Turn", x);
-            animator.transform.Rotate(0f, mouseX, 0f);
-        
-            //targetModel.transform.position = transform.position;
-            //transform.rotation = animator.transform.rotation;
-        }
-        //transform.position = animator.transform.position;
-        camera.transform.parent.localEulerAngles = new Vector3(headRotation, mouseX, 0f);
-        
-    }
-
-    private void AddAmmo(AmmoType ammoPrefab, int amnt) {
-        ammo[ammoPrefab] += amnt;
-    }
 }
