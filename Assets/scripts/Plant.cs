@@ -40,6 +40,7 @@ public class Plant : Interactable {
 	}
 
 	public int Harvest() {
+		Debug.Log("HARVEST!");
 		timerTimestamp = Time.time;
 		growthStage = 0;
 		
