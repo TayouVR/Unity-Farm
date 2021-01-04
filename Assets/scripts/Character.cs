@@ -1,6 +1,9 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using Object = UnityEngine.Object;
+using Random = UnityEngine.Random;
 
+[System.Serializable]
 public class Character {
 	
 	public PlayerEntity entity;
@@ -26,7 +29,9 @@ public class Character {
 	private List<Transform> spawnpoints = new List<Transform>();
 	private GameObject camera;
     
-	private Dictionary<AmmoType, int> ammo = new Dictionary<AmmoType, int>();
+	private List<Ammo> ammo = new List<Ammo>();
+
+	public int selectedAmmoIndex;
     
 	private GameObject lastFocussedInteractable;
     
@@ -97,11 +102,11 @@ public class Character {
 	}
 
 	public void Update() {
+		animator.speed = speed;
 		float rightSpeed = 0;
 		float frontSpeed = 0;
 		float mouseX = 0;
 		float mouseY = 0;
-		/*if (isLocalPlayer) {*/
             
 		// mouse, camera
 		mouseX = Input.GetAxis("Mouse X") * sensitivity * Time.deltaTime;
@@ -146,10 +151,17 @@ public class Character {
 			Debug.Log("Interact Input: " + Input.GetAxis("Interact"));
 			if (Input.GetAxis("Interact") > 0) {
 				// harvest plant
-				if (hitGO.GetComponent<Plant>()) {
-					Plant plant = hitGO.GetComponent<Plant>();
+				if (hitGO.TryGetComponent(out Plant plant)) {
 					if (plant.growthStage == 100) { 
 						AddAmmo(plant.ammoObject, plant.Harvest());
+					}
+				}
+				// collect simple Pickup
+				if (hitGO.TryGetComponent(out SimplePickup pickup)) {
+					if (pickup.isAmmo) { 
+						AddAmmo(pickup.ammoObject, pickup.PickUp());
+					} else {
+						// Do things when its not ammo
 					}
 				}
 			}
@@ -157,7 +169,33 @@ public class Character {
 			lastFocussedInteractable.GetComponent<Interactable>().Deselect();
 			lastFocussedInteractable = null;
 		}
-		/*}*/
+
+		if (Input.GetAxis("Fire1") > 0) {
+			Shoot();
+		}
+
+		if (Input.mouseScrollDelta.y > 0) {
+			Debug.Log(selectedAmmoIndex + 1 >= ammo.Count ? 0 : selectedAmmoIndex + 1);
+			selectedAmmoIndex = selectedAmmoIndex + 1 >= ammo.Count ? 0 : selectedAmmoIndex + 1;
+			Debug.Log(ammo[selectedAmmoIndex].type);
+		} else if (Input.mouseScrollDelta.y < 0) {
+			Debug.Log(selectedAmmoIndex - 1 < 0 ? ammo.Count - 1 : selectedAmmoIndex - 1);
+			selectedAmmoIndex = selectedAmmoIndex - 1 <= 0 ? ammo.Count - 1 : selectedAmmoIndex - 1;
+			Debug.Log(ammo[selectedAmmoIndex].type);
+		}
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
 
 		//check if character is grounded
 		//isGrounded = _characterController.isGrounded;
@@ -196,7 +234,31 @@ public class Character {
         
 	}
 
-	private void AddAmmo(AmmoType ammoPrefab, int amnt) {
-		ammo[ammoPrefab] += amnt;
+	private void Shoot() {
+		GameObject shot = Object.Instantiate(ammo[selectedAmmoIndex].type.gameObject, raycastSource.position, raycastSource.rotation);
+		shot.AddComponent<Rigidbody>().AddForce(raycastSource.forward * 1000);
 	}
+
+	private void AddAmmo(AmmoType ammoPrefab, int amnt) {
+		bool exists = false;
+		for (var i = 0; i < ammo.Count; i++) {
+			var ammo1 = ammo[i];
+			if (ammo1.type == ammoPrefab) {
+				ammo1.amount += amnt;
+				exists = true;
+			}
+		}
+
+		if (!exists) {
+			ammo.Add(new Ammo { type = ammoPrefab, amount = amnt});
+		}
+		
+	}
+	
+	private class Ammo {
+		public AmmoType type;
+		public int amount;
+	}
+	
+	
 }

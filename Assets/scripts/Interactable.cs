@@ -5,18 +5,21 @@ public class Interactable : MonoBehaviour {
 	public Material selectedMaterial;
 	private Material originalMaterial;
 
+	private Renderer meshRenderer;
+
 	private void Start() {
-		originalMaterial = GetComponent<MeshRenderer>().material;
+		originalMaterial = GetComponentInChildren<Renderer>().material;
+		meshRenderer = GetComponentInChildren<Renderer>();
 	}
 	
 
 	public void Select() {
 		Debug.Log("Object " + name + " selected");
-		GetComponent<MeshRenderer>().material = selectedMaterial;
+		meshRenderer.material = selectedMaterial;
 	}
 
 	public void Deselect() {
 		Debug.Log("Object " + name + " deselected");
-		GetComponent<MeshRenderer>().material = originalMaterial;
+		meshRenderer.material = originalMaterial;
 	}
 }

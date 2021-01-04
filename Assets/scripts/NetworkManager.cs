@@ -16,7 +16,7 @@ public class NetworkManager : MonoBehaviour {
 	public Vector3 cameraOffset;
 	[SerializeField] float sensitivity = 100;
 
-	private Character character;
+	public Character character;
 	
 	
 	[Header("Network Values")]

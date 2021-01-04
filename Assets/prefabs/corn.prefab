@@ -96,7 +96,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   name: Corn
-  damage: 0
+  damage: 1
   icon: {fileID: 0}
   droppedAmmo: {fileID: 7360857436212779468}
 --- !u!65 &8174703860175864936
