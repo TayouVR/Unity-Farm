@@ -8,7 +8,7 @@ using UnityEngine;
 public class NetworkManager : MonoBehaviour {
 	
 	[Header("Player Controller Values")]
-	public float jumpStrength = 1;
+	public float jumpStrength = 100;
 	public float speed = 1;
 	public AnimatorOverrideController animator;
 	public GameObject modelPrefab;

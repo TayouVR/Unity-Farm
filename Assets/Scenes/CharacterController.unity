@@ -672,5 +672,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: farmer_anime_girl
       objectReference: {fileID: 0}
+    - target: {fileID: 6791366575912439236, guid: f58989bcb3e868a4a97dcdb07dfc6cd6,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: f58989bcb3e868a4a97dcdb07dfc6cd6, type: 3}

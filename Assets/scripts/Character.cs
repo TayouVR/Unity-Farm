@@ -19,7 +19,7 @@ public class Character {
 	private Transform raycastSource;
 
 	//private CharacterController _characterController;
-	//private Rigidbody _rigidbody;
+	private Rigidbody _rigidbody;
 	private Camera cam;
 	private Transform _camTransform;
 	private float headRotation = 0f;
@@ -78,7 +78,6 @@ public class Character {
 		model.SetActive(true);
 
 		//_characterController = GetComponent<CharacterController>();
-		//_rigidbody = GetComponent<Rigidbody>();
 
 		// locally attach camera to player object
 		GameObject camRotationPoint = new GameObject();
@@ -95,8 +94,8 @@ public class Character {
 
 	    
 		// set model transform (pos, rot, parent)
-		Rigidbody rb = model.gameObject.AddComponent<Rigidbody>();
-		rb.constraints = RigidbodyConstraints.FreezeRotation;
+		_rigidbody = model.gameObject.AddComponent<Rigidbody>();
+		_rigidbody.constraints = RigidbodyConstraints.FreezeRotation;
 		CapsuleCollider col = model.gameObject.AddComponent<CapsuleCollider>();
 		col.center = new Vector3(0, 0.5f, 0);
 	}
@@ -170,10 +169,12 @@ public class Character {
 			lastFocussedInteractable = null;
 		}
 
+		// Schießen
 		if (Input.GetAxis("Fire1") > 0) {
 			Shoot();
 		}
 
+		// Munition Wechseln
 		if (Input.mouseScrollDelta.y > 0) {
 			Debug.Log(selectedAmmoIndex + 1 >= ammo.Count ? 0 : selectedAmmoIndex + 1);
 			selectedAmmoIndex = selectedAmmoIndex + 1 >= ammo.Count ? 0 : selectedAmmoIndex + 1;
@@ -183,16 +184,6 @@ public class Character {
 			selectedAmmoIndex = selectedAmmoIndex - 1 <= 0 ? ammo.Count - 1 : selectedAmmoIndex - 1;
 			Debug.Log(ammo[selectedAmmoIndex].type);
 		}
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
 		
 		
 		
@@ -209,7 +200,7 @@ public class Character {
 			// SetAnimator Info
 			animator.SetFloat(Right, rightSpeed); //movement.x);
 			animator.SetFloat(Forward, frontSpeed); //movement.z);
-			//_rigidbody.AddForce(new Vector3(0.0f, Input.GetAxis("Jump") * jumpStrength, 0.0f));
+			_rigidbody.AddForce(new Vector3(0.0f, Input.GetAxis("Jump") * jumpStrength, 0.0f));
 			animator.SetBool(Crouch, Input.GetAxis("Crouch") > 0);
 			animator.SetFloat(Jump, Input.GetAxis("Jump"));  //_rigidbody.velocity.y);
 		}

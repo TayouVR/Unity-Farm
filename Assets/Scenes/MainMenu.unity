@@ -234,7 +234,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1285c990338d4370bb383da144d96436, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  jumpStrength: 1
+  jumpStrength: 100
   speed: 1
   animator: {fileID: 9100000, guid: c320c9728d1b84123bc557181a9ac398, type: 2}
   modelPrefab: {fileID: 6791366575912439236, guid: f58989bcb3e868a4a97dcdb07dfc6cd6,
@@ -242,6 +242,15 @@ MonoBehaviour:
   spawnpoint: {fileID: 0}
   cameraOffset: {x: 0, y: 0, z: -3}
   sensitivity: 100
+  character:
+    jumpStrength: 0
+    speed: 0
+    animator: {fileID: 0}
+    modelPrefab: {fileID: 0}
+    spawnpoint: {fileID: 0}
+    cameraOffset: {x: 0, y: 0, z: 0}
+    sensitivity: 0
+    selectedAmmoIndex: 0
   client: {fileID: 239443248}
   playerId: 
   networkTickrate: 10

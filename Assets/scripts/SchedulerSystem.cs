@@ -89,6 +89,9 @@ public class SchedulerSystem : MonoBehaviour
 			}
 			catch (Exception e)
 			{
+				if (e.InnerException != null) {
+					Debug.Log(e.InnerException.Message + e.InnerException.StackTrace);
+				}
 				Debug.Log(e.Message + e.StackTrace);
 				Debug.Log($"[Core:Scheduler] A job could not be run. Please notify the developers and send them the logfile. " + JobsList[i].Job.Method.Name);
 			}
