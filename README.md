@@ -1,6 +1,5 @@
 # Unity Farm
-
-Unity Game made as Practice, part of my education.
+## This Project was a Educational Project. It is not maintained and the networking implementation, that was attempted here is not functional. 
 
 Contains:
 - Terrain
