@@ -105,6 +105,7 @@ namespace UnityEditor
         MaterialProperty maskEnum = null;
 
         MaterialEditor m_MaterialEditor;
+        ColorPickerHDRConfig m_ColorPickerHDRConfig = new ColorPickerHDRConfig(0f, 99f, 1 / 99f, 3f);
 
         bool m_FirstTimeApply = true;
 
@@ -403,7 +404,7 @@ namespace UnityEditor
                 bool hadEmissionTexture = emissionMap.textureValue != null;
 
                 // Texture and HDR color controls
-                m_MaterialEditor.TexturePropertyWithHDRColor(Styles.emissionText, emissionMap, emissionColorForRendering, false);
+                m_MaterialEditor.TexturePropertyWithHDRColor(Styles.emissionText, emissionMap, emissionColorForRendering, m_ColorPickerHDRConfig, false);
 
                 // If texture was assigned and color was black set color to white
                 float brightness = emissionColorForRendering.colorValue.maxColorComponent;
@@ -509,7 +510,7 @@ namespace UnityEditor
 			Rect colorPropertyRect = EditorGUILayout.GetControlRect();
 			colorPropertyRect.width = EditorGUIUtility.labelWidth+50.0f;
 			EditorGUI.showMixedValue = colorProperty.hasMixedValue;
-			boxColor = EditorGUI.ColorField(colorPropertyRect, new GUIContent (text), boxColor,true,true,hdr);
+			boxColor = EditorGUI.ColorField(colorPropertyRect, new GUIContent (text), boxColor,true,true,hdr,new ColorPickerHDRConfig(0,65536,0,3));
 			EditorGUI.showMixedValue = false;
 			if(EditorGUI.EndChangeCheck())
 			{
